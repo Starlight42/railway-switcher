@@ -1,7 +1,7 @@
 # Railway Switcher configuration File
 wifi_config = {
-    'ssid': 'widoud',
-    'password': 'mnmikHpG8d2wl9To2bsG'
+    'ssid': 'YOURSSID',
+    'password': 'YOURPWD'
 }
 
 SERVO01 = 5
