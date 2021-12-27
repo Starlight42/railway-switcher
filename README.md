@@ -7,11 +7,9 @@ It consists on a webpage that exposes a couple of buttons. Thoses inputs control
 You need to flash MicroPython on your board first. (TODO : add full working step by step for my specific board)
 
 ### File explanation
-> from me
-boot.py				-> executed when the nodemcu starts (or reset). In this file we set basic wifi client connection. You need to set your wifi SSID and PWD in the config file.
-config.py			-> contains several usefull variables.
-layout.py			-> contains the webpage html source.
-main.py				-> containes the "core" app code. 
-> from https://github.com/dhylands/python_lcd
-esp8266_i2c_lcd.py	-> library that facilitate i2c lcd handling.
-lcd_api.py			-> generic Micropython api to control lcd screens.
+- boot.py				-> executed when the nodemcu starts (or reset). In this file we set basic wifi client connection. You need to set your wifi SSID and PWD in the config file.
+- config.py			-> contains several usefull variables.
+- layout.py			-> contains the webpage html source.
+- main.py				-> containes the "core" app code. 
+- esp8266_i2c_lcd.py	-> library that facilitate i2c lcd handling. Thanks to https://github.com/dhylands/python_lcd
+- lcd_api.py			-> generic Micropython api to control lcd screens. Thanks to https://github.com/dhylands/python_lcd
