@@ -9,6 +9,11 @@ import ntptime
 import utime
 import config
 
+print('First boot line : GC Mem Free : {}\nGC Mem allocated : {}'.format(gc.mem_free(), gc.mem_alloc()))
+print('Current GC threshold : {}\nSettings threshold to 25000 since total mem size is {}'.format(gc.threshold(), config.MEM_TSIZE))
+gc.threshold(config.GC_THRESH)
+print('New GC threshold : {}'.format(gc.threshold()))
+
 def do_connect():
   sta_if = network.WLAN(network.STA_IF)
   start = utime.time()
@@ -50,4 +55,6 @@ servo02 = machine.PWM(machine.Pin(config.SERVO02), freq=50, duty=config.DUTY_HIG
 
 i2c = I2C(scl=Pin(config.SCL_PIN), sda=Pin(config.SDA_PIN), freq=500000)
 lcd = I2cLcd(i2c, config.DEFAULT_I2C_ADDR, config.LCD_NUM_ROWS, config.LCD_NUM_COLS)
-lcd.putstr("Railway Station\nSwitcher manager")
+lcd.putstr("AIP: {}\nSIP: {}".format(network.WLAN(network.AP_IF).ifconfig()[0],network.WLAN(network.STA_IF).ifconfig()[0]))
+gc.collect()
+
