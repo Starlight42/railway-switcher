@@ -4,6 +4,8 @@ wifi_config = {
     'password': 'YOURPWD'
 }
 
+MEM_TSIZE = 38000
+GC_THRESH = 10000
 SERVO01 = 5
 SERVO02 = 4
 BIND_PORT = 80
