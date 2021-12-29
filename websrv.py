@@ -4,6 +4,7 @@ Railway Switcher basic Webserver
 """
 from time import sleep
 from machine import reset
+from servoapi import servoApi
 import config
 import select
 import socket
@@ -14,6 +15,7 @@ class HttpServ(object):
   def __init__(self, lcd):
     print("Hello Webserver!")
     self.request = b''
+    self.servos = (servoApi(config.SERVO01, 50), servoApi(config.SERVO02, 50))
     self.lcd = lcd
     self.socket = None
     self.poller = None
@@ -88,18 +90,18 @@ class HttpServ(object):
         print('GET Request Content = {}'.format(str(self.req)))
         sw01 = self.req.find('/?switcher01')
         sw02 = self.req.find('/?switcher02')
-        sw01_duty = servo01.duty()
-        sw02_duty = servo02.duty()
+        sw01_duty = self.servo[0].get_duty()
+        sw02_duty = self.servo[1].get_duty()
         if sw01 == 6:
           if sw01_duty == config.DUTY_LOW:
             new_duty = config.DUTY_HIGH
             print('Triggered railway switch 01 from '+str(sw01_duty)+' to '+str(new_duty))
-            servo01.duty(new_duty)
+            self.servo[0].set_duty(new_duty)
         if sw02 == 6:
           if sw02_duty == config.DUTY_LOW:
             new_duty = config.DUTY_HIGH
             print('Triggered railway switch 02 from '+str(sw02_duty)+' to '+str(new_duty))
-            servo02.duty(new_duty)
+            self.servo[1].set_duty(new_duty)
 
         self.format_answer()
         self.conn.sendall(layout.html_template)
