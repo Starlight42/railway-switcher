@@ -85,26 +85,25 @@ class HttpServ(object):
         self.conn, self.cli_addr = self.socket.accept()
         self.lcd.clear()
         self.lcd.putstr('cli {}'.format(str(self.cli_addr[0])))
-        self.req = self.conn.recv(512)
+        self.req = str(self.conn.recv(512))
         self.conn.settimeout(None)
-        print('GET Request Content = {}'.format(str(self.req)))
+        print('GET Request Content = {}'.format(self.req))
         sw01 = self.req.find('/?switcher01')
         sw02 = self.req.find('/?switcher02')
-        sw01_duty = self.servo[0].get_duty()
-        sw02_duty = self.servo[1].get_duty()
+        sw01_duty = self.servos[0]._get_duty()
+        sw02_duty = self.servos[1]._get_duty()
         if sw01 == 6:
           if sw01_duty == config.DUTY_LOW:
             new_duty = config.DUTY_HIGH
             print('Triggered railway switch 01 from '+str(sw01_duty)+' to '+str(new_duty))
-            self.servo[0].set_duty(new_duty)
+            self.servos[0]._set_duty(new_duty)
         if sw02 == 6:
           if sw02_duty == config.DUTY_LOW:
             new_duty = config.DUTY_HIGH
             print('Triggered railway switch 02 from '+str(sw02_duty)+' to '+str(new_duty))
-            self.servo[1].set_duty(new_duty)
+            self.servos[1]._set_duty(new_duty)
 
         self.format_answer()
         self.conn.sendall(layout.html_template)
         self.conn.close()
-
 
