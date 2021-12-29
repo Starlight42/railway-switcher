@@ -11,9 +11,10 @@ import layout
 
 
 class HttpServ(object):
-  def __init__(self):
+  def __init__(self, lcd):
     print("Hello Webserver!")
     self.request = b''
+    self.lcd = lcd
     self.socket = None
     self.poller = None
     self.conn = None
@@ -56,16 +57,6 @@ class HttpServ(object):
 
     self.request = b''
 
-  def parse_json(self, request):
-    if search("\\s(\".*)[:]\\s(.*\")", request):
-      json_string = request.decode().split('\r\n')[-1:]
-      for data in json_string:
-        json_Data = loads(data)
-        return json_Data
-    else:
-      print("Data Not Found!")
-      return 0
-
   def format_answer(self):
     self.conn.send('HTTP/1.1 200 OK\n')
     self.conn.send('Content-Type: text/html\n')
@@ -90,8 +81,8 @@ class HttpServ(object):
       if res:
         print('In poller poll')
         self.conn, self.cli_addr = self.socket.accept()
-        lcd.clear()
-        lcd.putstr('cli {}'.format(str(self.cli_addr[0])))
+        self.lcd.clear()
+        self.lcd.putstr('cli {}'.format(str(self.cli_addr[0])))
         self.req = self.conn.recv(512)
         self.conn.settimeout(None)
         print('GET Request Content = {}'.format(str(self.req)))
@@ -113,4 +104,5 @@ class HttpServ(object):
         self.format_answer()
         self.conn.sendall(layout.html_template)
         self.conn.close()
+
 
