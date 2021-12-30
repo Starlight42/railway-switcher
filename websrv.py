@@ -15,13 +15,13 @@ class HttpServ(object):
   def __init__(self, lcd):
     print("Hello Webserver!")
     self.request = b''
-    self.servos = (servoApi(config.SERVO01, 50), servoApi(config.SERVO02, 50))
     self.lcd = lcd
     self.socket = None
     self.poller = None
     self.conn = None
     self.cli_addr = None
     self.req = None
+    self.servos = (servoApi(config.SERVO01, 50), servoApi(config.SERVO02, 50))
 
   def connection(self, response=None):
     fp = open("index.html", "r")
@@ -59,12 +59,12 @@ class HttpServ(object):
 
     self.request = b''
 
-  def format_answer(self):
+  def _format_answer(self):
     self.conn.send('HTTP/1.1 200 OK\n')
     self.conn.send('Content-Type: text/html\n')
     self.conn.send('Connection: close\n\n')
 
-  def run_socket(self):
+  def _create_socket(self):
     try:
       self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -76,8 +76,12 @@ class HttpServ(object):
       reset()
       pass
 
+  def run_socket(self):
+    if not self.socket:
+      self._create_socket()
     self.poller = select.poll()
     self.poller.register(self.socket, select.POLLIN)
+
     while True:
       res = self.poller.poll(1)
       if res:
@@ -103,7 +107,7 @@ class HttpServ(object):
             print('Triggered railway switch 02 from '+str(sw02_duty)+' to '+str(new_duty))
             self.servos[1]._set_duty(new_duty)
 
-        self.format_answer()
+        self._format_answer()
         self.conn.sendall(layout.html_template)
         self.conn.close()
 
