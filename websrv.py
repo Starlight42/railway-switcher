@@ -20,27 +20,13 @@ class HttpServ(object):
     self.poller = None
     self.conn = None
     self.cli_addr = None
-    self.req = None
-    self.servos = (servoApi(config.SERVO01, 50), servoApi(config.SERVO02, 50))
+    self.servos = {'GET /?switcher01': servoApi(config.SERVO01, 50),
+                   'GET /?switcher02': servoApi(config.SERVO02, 50)}
 
-  def connection(self, response=None):
-    fp = open("index.html", "r")
-    while True:
-      # chunk = fp.read(450)
-      chunk = fp.read(1024) # <-- Test 1024 Chunk Size
-      try:
-        if not chunk: break
-        self.conn.sendall(chunk)
-      except Exception as exc:
-        # print("Send Data Err", exc.args[0])
-        pass
-  
-    self.conn.close()
-    fp.close()
-
-  def send_response(self, content):
+  def _send_response(self):
     try:
-      self.conn.sendall(content)
+      self._format_answer()
+      self.conn.sendall(layout.html_template)
       sleep(0.2)
     except Exception as exc:
       # print("Send Response Err", exc.args[0])
@@ -48,15 +34,29 @@ class HttpServ(object):
     finally:
       self.conn.close()
 
-  def parse_request(self):
-    action_list = ['/writeSounds']
+  def _move_servo(self, switch_n):
+    old_duty = self.servos[switch_n].get_duty()
 
-    for action in action_list:
+    if old_duty == config.DUTY_LOW:
+      new_duty = config.DUTY_HIGH
+    else:
+      new_duty = config.DUTY_LOW
+
+    print('Triggered railway switch {} from {} to {}'.format(switch_n, str(old_duty), str(new_duty)))
+    self.servos[switch_n].set_duty(new_duty)
+
+  def _parse_request(self):
+    action_dict = {
+    'GET /?switcher01': self._move_servo,
+    'GET /?switcher02': self._move_servo
+    }
+
+    for action in action_dict:
       if str(self.request).find(action) > -1:
-        if action == '/MAROUTE':
-          print('Return write.')
-          #self.send_response()
+        print('Matched an action ! {}'.format(action))
+        action_dict[action](action)
 
+    # Reseting request buffer
     self.request = b''
 
   def _format_answer(self):
@@ -89,25 +89,12 @@ class HttpServ(object):
         self.conn, self.cli_addr = self.socket.accept()
         self.lcd.clear()
         self.lcd.putstr('cli {}'.format(str(self.cli_addr[0])))
-        self.req = str(self.conn.recv(512))
+        self.request = str(self.conn.recv(512))
         self.conn.settimeout(None)
-        print('GET Request Content = {}'.format(self.req))
-        sw01 = self.req.find('/?switcher01')
-        sw02 = self.req.find('/?switcher02')
-        sw01_duty = self.servos[0].get_duty()
-        sw02_duty = self.servos[1].get_duty()
-        if sw01 == 6:
-          if sw01_duty == config.DUTY_LOW:
-            new_duty = config.DUTY_HIGH
-            print('Triggered railway switch 01 from '+str(sw01_duty)+' to '+str(new_duty))
-            self.servos[0].set_duty(new_duty)
-        if sw02 == 6:
-          if sw02_duty == config.DUTY_LOW:
-            new_duty = config.DUTY_HIGH
-            print('Triggered railway switch 02 from '+str(sw02_duty)+' to '+str(new_duty))
-            self.servos[1].set_duty(new_duty)
+        print('GET Request Content = {}'.format(self.request))
+        self._parse_request()
+        # Returning home page
+        self._send_response()
 
-        self._format_answer()
-        self.conn.sendall(layout.html_template)
-        self.conn.close()
+    gc.collect()
 
