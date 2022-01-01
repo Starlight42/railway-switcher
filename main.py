@@ -4,7 +4,6 @@ Railway Switcher Main
 """
 
 from websrv import HttpServ
-from lcd_iface import lcdIface
 
 try:
   server = HttpServ(lcd)
