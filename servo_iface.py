@@ -1,6 +1,8 @@
 """
 Augustin Bernachon 28/12/2021
 Railway Switcher Servo Interface
+Simple class that allow reusing PWM servo previously created instance
+if exists and hide PWM creation if it needs to be instanciated.
 """
 
 from machine import PWM, Pin
