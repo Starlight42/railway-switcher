@@ -55,11 +55,9 @@ except:
   utime.sleep_ms(10000)
   machine.reset()
 
-servo01 = machine.PWM(machine.Pin(config.SERVO01), freq=50, duty=config.DUTY_LOW)
-servo02 = machine.PWM(machine.Pin(config.SERVO02), freq=50, duty=config.DUTY_HIGH)
 
-#i2c = I2C(scl=Pin(config.SCL_PIN), sda=Pin(config.SDA_PIN), freq=500000)
-#lcd = I2cLcd(i2c, config.DEFAULT_I2C_ADDR, config.LCD_NUM_ROWS, config.LCD_NUM_COLS)
-#lcd.putstr("AIP: {}\nSIP: {}".format(network.WLAN(network.AP_IF).ifconfig()[0],network.WLAN(network.STA_IF).ifconfig()[0]))
+i2c = I2C(scl=Pin(config.SCL_PIN), sda=Pin(config.SDA_PIN), freq=500000)
+lcd = I2cLcd(i2c, config.DEFAULT_I2C_ADDR, config.LCD_NUM_ROWS, config.LCD_NUM_COLS)
+lcd.putstr("AIP: {}\nSIP: {}".format(network.WLAN(network.AP_IF).ifconfig()[0],network.WLAN(network.STA_IF).ifconfig()[0]))
 gc.collect()
 
