@@ -25,23 +25,25 @@ class HttpServ(object):
     self.servos = self._get_servo_list(servos)
 
   def _get_servo_list(self, servos):
+    servo_dict = dict()
+
     if not servos:
-      servos = ()
       for servo in config.servos:
-        servos.append(servoIface(servo['servo_pin'], servo['servo_req_filter'], servo['servo_name']))
+        servo_dict[servo['servo_req_filter']] = servoIface(servo['servo_pin'], servo['servo_req_filter'], servo['servo_name'])
     else:
       for servo in servos:
-        if isinstance(servo, PWM)
-          servos.append(servoIface(servo['servo_pin'], servo['servo_req_filter'], servo['servo_name']))
-    return servos
+        if isinstance(servo, PWM):
+          iservo = servoIface(servo=servo)
+          servo_dict[iservo.get_req_filter()] = iservo
+
+    return servo_dict
 
   def _send_response(self):
     try:
       self._format_answer()
       self.conn.sendall(layout.html_template)
-      # sleep(0.2)
     except Exception as exc:
-      # print("Send Response Err", exc.args[0])
+      print("Send Response Err", exc.args[0])
       pass
     finally:
       self.conn.close()
@@ -58,15 +60,14 @@ class HttpServ(object):
     self.servos[switch_n].set_duty(new_duty)
 
   def _parse_request(self):
-    actions = dict()
+    action_dict = dict()
 
     for servo in self.servos:
-      actions[servo.get_req_filter] = self._move_servo
+      action_dict[servo] = self._move_servo
 
-    for action in actions:
+    for action in action_dict:
       if str(self.request).find(action) > -1:
-        print('Matched an action ! {}'.format(action))
-        actions[action](action)
+        action_dict[action](action)
 
     # Reseting request buffer
     self.request = b''
@@ -97,13 +98,13 @@ class HttpServ(object):
     while True:
       res = self.poller.poll(1)
       if res:
-        print('In poller poll')
+        # print('In poller poll')
         self.conn, self.cli_addr = self.socket.accept()
         self.lcd.clear()
         self.lcd.putstr('cli {}'.format(str(self.cli_addr[0])))
         self.request = str(self.conn.recv(512))
         self.conn.settimeout(None)
-        print('GET Request Content = {}'.format(self.request))
+        # print('GET Request Content = {}'.format(self.request))
         self._parse_request()
         # Returning home page
         self._send_response()

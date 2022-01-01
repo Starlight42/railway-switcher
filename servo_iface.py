@@ -9,22 +9,38 @@ import config
 
 
 class servoIface(object):
-  def __init__(self, servo_pin, servo_filter, servo_name,
+  def __init__(self, servo_pin=None, servo_filter=None, servo_name=None,
                servo_freq=config.SERVO_FREQ, servo_duty=30, servo=None):
     gc.collect()
-    self.pin = servo_pin
-    self.req_filter = servo_filter
-    self.name = servo_name
     self.freq = servo_freq
-    self.duty = servo_duty
-    self.servo = self._check_servo_type() servo if servo isinstance(servo, PWM) else self._get_servo_ptr()
+
+    if isinstance(servo, PWM):
+      print('Servo is an instance of PWM')
+      self.servo = servo
+      self.pin = int(str(servo)[4])
+
+      for svo in config.servos:
+        if svo['servo_pin'] == self.pin:
+          self.req_filter = svo['servo_req_filter']
+          self.name = svo['servo_name']
+          self.duty = int(servo.duty())
+    else:
+      print('Servo is not an instance of PWM creating Servo')
+      self.pin = servo_pin
+      self.req_filter = servo_filter
+      self.name = servo_name
+      self.duty = servo_duty
+      self.servo = self._get_servo_ptr()
 
   def _get_servo_ptr(self):
+    pwm = None
+
     try:
-      print('Creating PWM output')
-      return machine.PWM(machine.Pin(self.pin), freq=self.freq, duty=self.duty)
+      pwm = PWM(Pin(self.pin), freq=self.freq, duty=self.duty)
     except:
       print('Can not get PWM output, reseting..')
+
+    return pwm
 
   def get_duty(self):
     return self.duty
