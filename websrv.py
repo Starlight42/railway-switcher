@@ -2,9 +2,11 @@
 Augustin Bernachon 28/12/2021
 Railway Switcher basic Webserver
 """
+
 from time import sleep
-from machine import reset
-from servoapi import servoApi
+from machine import reset, PWM
+from servo_iface import servoIface
+from lcd_iface import lcdIface
 import config
 import select
 import socket
@@ -12,22 +14,32 @@ import layout
 
 
 class HttpServ(object):
-  def __init__(self, lcd):
-    print("Hello Webserver!")
+  def __init__(self, lcd=None, servos=None):
+    print("Started Http web SRV.")
     self.request = b''
-    self.lcd = lcd
     self.socket = None
     self.poller = None
     self.conn = None
     self.cli_addr = None
-    self.servos = {'GET /?switcher01': servoApi(config.SERVO01, 50),
-                   'GET /?switcher02': servoApi(config.SERVO02, 50)}
+    self.lcd = lcdIface(lcd).get_lcd()
+    self.servos = self._get_servo_list(servos)
+
+  def _get_servo_list(self, servos):
+    if not servos:
+      servos = ()
+      for servo in config.servos:
+        servos.append(servoIface(servo['servo_pin'], servo['servo_req_filter'], servo['servo_name']))
+    else:
+      for servo in servos:
+        if isinstance(servo, PWM)
+          servos.append(servoIface(servo['servo_pin'], servo['servo_req_filter'], servo['servo_name']))
+    return servos
 
   def _send_response(self):
     try:
       self._format_answer()
       self.conn.sendall(layout.html_template)
-      sleep(0.2)
+      # sleep(0.2)
     except Exception as exc:
       # print("Send Response Err", exc.args[0])
       pass
@@ -46,15 +58,15 @@ class HttpServ(object):
     self.servos[switch_n].set_duty(new_duty)
 
   def _parse_request(self):
-    action_dict = {
-    'GET /?switcher01': self._move_servo,
-    'GET /?switcher02': self._move_servo
-    }
+    actions = dict()
 
-    for action in action_dict:
+    for servo in self.servos:
+      actions[servo.get_req_filter] = self._move_servo
+
+    for action in actions:
       if str(self.request).find(action) > -1:
         print('Matched an action ! {}'.format(action))
-        action_dict[action](action)
+        actions[action](action)
 
     # Reseting request buffer
     self.request = b''
