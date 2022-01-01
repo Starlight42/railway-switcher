@@ -31,7 +31,7 @@ class lcdIface(object):
 
   def _get_lcd_ptr(self):
     try:
-      print('Creating lcd pointeur')
+      print('No existing lcd pointeur, creating one')
       self._get_i2c_ptr()
       return I2cLcd(self.i2c, self.i2c_addr, self.lcd_rows, self.lcd_col)
     except:
