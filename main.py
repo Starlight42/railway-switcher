@@ -1,7 +1,7 @@
 from websrv import HttpServ
 
 try:
-  server = HttpServ()
+  server = HttpServ(lcd)
 except OSError:
   import machine
   machine.reset()
