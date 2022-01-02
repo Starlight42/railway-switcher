@@ -4,7 +4,7 @@ Railway Switcher basic Webserver
 """
 
 from time import sleep
-from machine import reset, PWM
+from machine import reset, PWM, Pin
 from servo_iface import servoIface
 from lcd_iface import lcdIface
 import config
@@ -90,6 +90,9 @@ class HttpServ(object):
       pass
 
   def run_socket(self):
+    flag = True
+    btn = Pin(15, Pin.IN)
+
     if not self.socket:
       self._create_socket()
     self.poller = select.poll()
@@ -108,6 +111,19 @@ class HttpServ(object):
         self._parse_request()
         # Returning home page
         self._send_response()
+
+      btn_first = btn.value()
+      sleep(0.01)
+      btn_second = btn.value()
+      if btn_first and not btn_second:
+        if flag:
+          print('backlight_off')
+          self.lcd.backlight_off()
+          flag = False
+        else:
+          print('backlight_on')
+          self.lcd.backlight_on()
+          flag = True
 
     gc.collect()
 
