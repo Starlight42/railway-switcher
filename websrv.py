@@ -23,6 +23,8 @@ class HttpServ(object):
     self.cli_addr = None
     self.lcd = lcdIface(lcd).get_lcd()
     self.servos = self._get_servo_list(servos)
+    self.action_dict = {servo: self._move_servo for servo in self.servos}
+    print('action dict is : {}'.format(self.action_dict))
 
   def _get_servo_list(self, servos):
     servo_dict = dict()
@@ -60,14 +62,9 @@ class HttpServ(object):
     self.servos[switch_n].set_duty(new_duty)
 
   def _parse_request(self):
-    action_dict = dict()
-
-    for servo in self.servos:
-      action_dict[servo] = self._move_servo
-
-    for action in action_dict:
+    for action in self.action_dict:
       if str(self.request).find(action) > -1:
-        action_dict[action](action)
+        self.action_dict[action](action)
 
     # Reseting request buffer
     self.request = b''
@@ -89,10 +86,15 @@ class HttpServ(object):
       reset()
       pass
 
-  def run_socket(self):
-    flag = True
-    btn = Pin(15, Pin.IN)
+  def toggle_lcd_backlight(self):
+    if self.lcd.backlight:
+      self.lcd.backlight_off()
+      config.LCD_LIGHT = False
+    else:
+      self.lcd.backlight_on()
+      config.LCD_LIGHT = True
 
+  def run_socket(self):
     if not self.socket:
       self._create_socket()
     self.poller = select.poll()
@@ -101,29 +103,18 @@ class HttpServ(object):
     while True:
       res = self.poller.poll(1)
       if res:
-        # print('In poller poll')
         self.conn, self.cli_addr = self.socket.accept()
         self.lcd.clear()
         self.lcd.putstr('cli {}'.format(str(self.cli_addr[0])))
         self.request = str(self.conn.recv(512))
         self.conn.settimeout(None)
-        # print('GET Request Content = {}'.format(self.request))
         self._parse_request()
         # Returning home page
         self._send_response()
 
-      btn_first = btn.value()
-      sleep(0.01)
-      btn_second = btn.value()
-      if btn_first and not btn_second:
-        if flag:
-          print('backlight_off')
-          self.lcd.backlight_off()
-          flag = False
-        else:
-          print('backlight_on')
-          self.lcd.backlight_on()
-          flag = True
+      if config.BTN_LEFT:
+        self.toggle_lcd_backlight()
+        config.BTN_LEFT = False
 
     gc.collect()
 
